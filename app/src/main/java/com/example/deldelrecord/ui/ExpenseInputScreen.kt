@@ -1,4 +1,5 @@
 // ExpenseInputScreen.kt - Case 3: インタラクティブ＆ゲーム要素の導入 (Rich Modern Design)
+//dev ブランチ
 package com.example.deldelrecord.ui
 
 import androidx.compose.animation.animateColorAsState
