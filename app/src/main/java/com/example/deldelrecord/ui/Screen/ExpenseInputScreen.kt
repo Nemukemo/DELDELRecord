@@ -1,4 +1,4 @@
-package com.example.deldelrecord.ui
+package com.example.deldelrecord.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -7,14 +7,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
 import java.util.*
 
 @Composable
-fun ExpenseInputScreen(navController: NavController, viewModel: ExpenseViewModel = viewModel()) {
+fun ExpenseInputScreen(
+    navController: NavController,
+    viewModel: ExpenseViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     var amount by remember { mutableStateOf("") }
     var memo by remember { mutableStateOf("") }
     val expenseTypes = listOf("修学費", "食費", "娯楽費")
@@ -28,7 +30,7 @@ fun ExpenseInputScreen(navController: NavController, viewModel: ExpenseViewModel
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("出費入力") })
+            TopAppBar(title = { Text("手入力画面") })
         }
     ) { padding ->
         Column(
@@ -45,7 +47,6 @@ fun ExpenseInputScreen(navController: NavController, viewModel: ExpenseViewModel
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
-
             Text("出費の種類")
             expenseTypes.forEach { type ->
                 Row {
@@ -56,14 +57,12 @@ fun ExpenseInputScreen(navController: NavController, viewModel: ExpenseViewModel
                     Text(text = type)
                 }
             }
-
             OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
                 label = { Text("メモ (任意)") },
                 modifier = Modifier.fillMaxWidth()
             )
-
             Button(
                 onClick = {
                     val expense = Expense(
@@ -73,7 +72,7 @@ fun ExpenseInputScreen(navController: NavController, viewModel: ExpenseViewModel
                         memo = memo.ifBlank { null }
                     )
                     viewModel.insertExpense(expense)
-                    navController.navigate("expense_list") // 登録後に一覧へ遷移
+                    // 必要ならメッセージ表示や画面遷移など
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
