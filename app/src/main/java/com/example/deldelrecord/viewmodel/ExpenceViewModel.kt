@@ -3,57 +3,47 @@ package com.example.deldelrecord.viewmodel
 import android.app.Application
 import androidx.lifecycle.*
 import com.example.deldelrecord.data.Expense
+import com.example.deldelrecord.data.ExpenseDao
 import com.example.deldelrecord.data.ExpenseDatabase
 import kotlinx.coroutines.launch
 
 class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
-    private val dao = ExpenseDatabase.getDatabase(application).expenseDao()
 
-    private val _expenses = MutableLiveData<List<Expense>>()
-    val expenses: LiveData<List<Expense>> = _expenses
+    private val dao: ExpenseDao = ExpenseDatabase.getDatabase(application).expenseDao()
 
+    // 全件取得を LiveData で変換して観察
     val allExpenses: LiveData<List<Expense>> = dao.getAllExpenses().asLiveData()
 
-    fun insertExpense(expense: Expense) {
+    private val _filteredExpenses = MutableLiveData<List<Expense>>()
+    val filteredExpenses: LiveData<List<Expense>> = _filteredExpenses
+
+    fun getExpensesByAmountRange(min: Int, max: Int) {
         viewModelScope.launch {
-            dao.insertExpense(expense)
-            refreshAllExpenses() // 追加後にリスト更新
+            _filteredExpenses.value = dao.getExpensesByAmountRange(min, max)
         }
     }
 
-    fun refreshAllExpenses() {
+    fun getExpensesByTypes(types: List<String>) {
         viewModelScope.launch {
-            _expenses.postValue(dao.getAllExpensesDirect()) // suspend版を別途用意
+            _filteredExpenses.value = dao.getExpensesByTypes(types)
         }
     }
 
-    fun filterByAmount(minAmount: Int, maxAmount: Int) {
+    fun getExpensesByDate(date: String) {
         viewModelScope.launch {
-            _expenses.postValue(dao.getExpensesByAmountRange(minAmount, maxAmount))
+            _filteredExpenses.value = dao.getExpensesByDate(date)
         }
     }
 
-    fun filterByTypes(expenseTypes: List<String>) {
+    fun getExpensesByPartialDate(partial: String) {
         viewModelScope.launch {
-            _expenses.postValue(dao.getExpensesByTypes(expenseTypes))
+            _filteredExpenses.value = dao.getExpensesByPartialDate(partial)
         }
     }
 
-    fun filterByDate(date: String) {
+    fun getExpensesByDateRange(start: String, end: String) {
         viewModelScope.launch {
-            _expenses.postValue(dao.getExpensesByDate(date))
-        }
-    }
-
-    fun filterByPartialDate(partialDate: String) {
-        viewModelScope.launch {
-            _expenses.postValue(dao.getExpensesByPartialDate(partialDate))
-        }
-    }
-
-    fun filterByDateRange(startDate: String, endDate: String) {
-        viewModelScope.launch {
-            _expenses.postValue(dao.getExpensesByDateRange(startDate, endDate))
+            _filteredExpenses.value = dao.getExpensesByDateRange(start, end)
         }
     }
 }
