@@ -2,7 +2,6 @@ package com.example.deldelrecord.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.*
-import androidx.lifecycle.asLiveData
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.data.ExpenseDatabase
 import kotlinx.coroutines.launch
@@ -10,61 +9,51 @@ import kotlinx.coroutines.launch
 class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
     private val dao = ExpenseDatabase.getDatabase(application).expenseDao()
 
+    private val _expenses = MutableLiveData<List<Expense>>()
+    val expenses: LiveData<List<Expense>> = _expenses
+
     val allExpenses: LiveData<List<Expense>> = dao.getAllExpenses().asLiveData()
 
     fun insertExpense(expense: Expense) {
         viewModelScope.launch {
             dao.insertExpense(expense)
+            refreshAllExpenses() // 追加後にリスト更新
         }
     }
 
-    fun getExpensesByAmountRange(minAmount: Int, maxAmount: Int): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun refreshAllExpenses() {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByAmountRange(minAmount, maxAmount))
+            _expenses.postValue(dao.getAllExpensesDirect()) // suspend版を別途用意
         }
-        return result
     }
 
-    fun getExpensesByType(expenseType: String): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun filterByAmount(minAmount: Int, maxAmount: Int) {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByType(expenseType))
+            _expenses.postValue(dao.getExpensesByAmountRange(minAmount, maxAmount))
         }
-        return result
     }
 
-    fun getExpensesByTypes(expenseTypes: List<String>): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun filterByTypes(expenseTypes: List<String>) {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByTypes(expenseTypes))
+            _expenses.postValue(dao.getExpensesByTypes(expenseTypes))
         }
-        return result
     }
 
-
-    fun getExpensesByDate(date: String): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun filterByDate(date: String) {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByDate(date))
+            _expenses.postValue(dao.getExpensesByDate(date))
         }
-        return result
     }
 
-    fun getExpensesByDateRange(startDate: String, endDate: String): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun filterByPartialDate(partialDate: String) {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByDateRange(startDate, endDate))
+            _expenses.postValue(dao.getExpensesByPartialDate(partialDate))
         }
-        return result
     }
 
-    fun getExpensesByPartialDate(partialDate: String): LiveData<List<Expense>> {
-        val result = MutableLiveData<List<Expense>>()
+    fun filterByDateRange(startDate: String, endDate: String) {
         viewModelScope.launch {
-            result.postValue(dao.getExpensesByPartialDate(partialDate))
+            _expenses.postValue(dao.getExpensesByDateRange(startDate, endDate))
         }
-        return result
     }
-
 }
