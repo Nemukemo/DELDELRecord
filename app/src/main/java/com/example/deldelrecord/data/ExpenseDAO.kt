@@ -34,4 +34,7 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
     fun getExpensesByDateRange(startDate: String, endDate: String): List<Expense>
 
+    @Query("SELECT * FROM expenses WHERE date LIKE :partialDate || '%' ORDER BY date ASC")
+    fun getExpensesByPartialDate(partialDate: String): List<Expense>
+
 }

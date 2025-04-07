@@ -58,4 +58,13 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
         return result
     }
+
+    fun getExpensesByPartialDate(partialDate: String): LiveData<List<Expense>> {
+        val result = MutableLiveData<List<Expense>>()
+        viewModelScope.launch {
+            result.postValue(dao.getExpensesByPartialDate(partialDate))
+        }
+        return result
+    }
+
 }
