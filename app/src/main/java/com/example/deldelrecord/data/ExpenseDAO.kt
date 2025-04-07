@@ -22,6 +22,10 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE type = :expenseType ORDER BY date DESC")
     fun getExpensesByType(expenseType: String): List<Expense>
 
+    @Query("SELECT * FROM expenses WHERE type IN (:expenseTypes) ORDER BY date DESC")
+    fun getExpensesByTypes(expenseTypes: List<String>): List<Expense>
+
+
     // ③ 特定の日付を選択してソート（例：金額昇順）
     @Query("SELECT * FROM expenses WHERE date = :date ORDER BY amount ASC")
     fun getExpensesByDate(date: String): List<Expense>
@@ -29,4 +33,5 @@ interface ExpenseDao {
     // ④ 日付範囲を選択してソート（例：日付昇順）
     @Query("SELECT * FROM expenses WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
     fun getExpensesByDateRange(startDate: String, endDate: String): List<Expense>
+
 }
