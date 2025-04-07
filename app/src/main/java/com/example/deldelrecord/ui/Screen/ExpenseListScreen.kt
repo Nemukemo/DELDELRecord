@@ -15,44 +15,63 @@ import com.example.deldelrecord.viewmodel.ExpenseViewModel
 
 @Composable
 fun ExpenseListScreen(
-    navController: NavController,
-    viewModel: ExpenseViewModel = viewModel()
+    viewModel: ExpenseViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val expenses by viewModel.allExpenses.observeAsState(initial = emptyList())
+    var showFilterDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("記録一覧") })
+    // Example row with "Total Amount" text and filter button
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth().padding(16.dp)
+    ) {
+        Text("Total Amount: 10000") // Just an example
+        Button(onClick = { showFilterDialog = true }) {
+            Text("絞り込み")
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            Text("合計金額: ${expenses.sumOf { it.amount }} 円", style = MaterialTheme.typography.h6)
-            Spacer(modifier = Modifier.height(16.dp))
+    }
 
-            LazyColumn {
-                items(expenses) { expense ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        elevation = 4.dp
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("金額: ${expense.amount} 円")
-                            Text("種類: ${expense.type}")
-                            Text("日付: ${expense.date}")
-                            expense.memo?.let {
-                                Text("メモ: $it")
-                            }
-                        }
+    if (showFilterDialog) {
+        AlertDialog(
+            onDismissRequest = { showFilterDialog = false },
+            title = { Text("絞り込み") },
+            text = {
+                Column {
+                    // 1) Amount range filter
+                    Button(onClick = {
+                        viewModel.getExpensesByAmountRange(0, 1000)
+                        showFilterDialog = false
+                    }) {
+                        Text("金額の上限／下限")
+                    }
+                    // 2) Type filter
+                    Button(onClick = {
+                        viewModel.getExpensesByType("食費")
+                        showFilterDialog = false
+                    }) {
+                        Text("出費の種類")
+                    }
+                    // 3) Date filter
+                    Button(onClick = {
+                        viewModel.getExpensesByDate("2024-01-01")
+                        showFilterDialog = false
+                    }) {
+                        Text("日付")
+                    }
+                    // 4) Date range filter
+                    Button(onClick = {
+                        viewModel.getExpensesByDateRange("2024-01-01", "2024-01-31")
+                        showFilterDialog = false
+                    }) {
+                        Text("日付範囲")
                     }
                 }
+            },
+            confirmButton = {},
+            dismissButton = {
+                Button(onClick = { showFilterDialog = false }) {
+                    Text("Close")
+                }
             }
-        }
+        )
     }
 }
