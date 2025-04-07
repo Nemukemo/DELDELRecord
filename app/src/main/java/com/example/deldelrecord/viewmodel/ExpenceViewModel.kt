@@ -34,6 +34,15 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         return result
     }
 
+    fun getExpensesByTypes(expenseTypes: List<String>): LiveData<List<Expense>> {
+        val result = MutableLiveData<List<Expense>>()
+        viewModelScope.launch {
+            result.postValue(dao.getExpensesByTypes(expenseTypes))
+        }
+        return result
+    }
+
+
     fun getExpensesByDate(date: String): LiveData<List<Expense>> {
         val result = MutableLiveData<List<Expense>>()
         viewModelScope.launch {
@@ -49,4 +58,13 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
         return result
     }
+
+    fun getExpensesByPartialDate(partialDate: String): LiveData<List<Expense>> {
+        val result = MutableLiveData<List<Expense>>()
+        viewModelScope.launch {
+            result.postValue(dao.getExpensesByPartialDate(partialDate))
+        }
+        return result
+    }
+
 }
