@@ -21,7 +21,10 @@ fun ExpenseListScreen(
     navController: NavController,
     viewModel: ExpenseViewModel = viewModel()
 ) {
-    val expenses by viewModel.expenses.observeAsState(emptyList())
+    val allExpenses by viewModel.allExpenses.observeAsState(emptyList())
+    val filteredExpenses by viewModel.filteredExpenses.observeAsState()
+
+    val expenses = filteredExpenses ?: allExpenses
 
     // ダイアログ状態
     var showFilterDialog by remember { mutableStateOf(false) }
@@ -130,7 +133,7 @@ fun ExpenseListScreen(
                 Button(onClick = {
                     val lower = min.toIntOrNull() ?: 0
                     val upper = max.toIntOrNull() ?: Int.MAX_VALUE
-                    viewModel.filterByAmount(lower, upper)
+                    viewModel.getExpensesByAmountRange(lower, upper)
                     showAmountDialog = false
                 }) {
                     Text("適用")
@@ -173,7 +176,7 @@ fun ExpenseListScreen(
             },
             confirmButton = {
                 Button(onClick = {
-                    viewModel.filterByTypes(selected)
+                    viewModel.getExpensesByTypes(selected)
                     showTypeDialog = false
                 }) {
                     Text("適用")
@@ -212,7 +215,7 @@ fun ExpenseListScreen(
                         if (month.isNotBlank()) m else null,
                         if (day.isNotBlank()) d else null
                     ).joinToString("-")
-                    viewModel.filterByPartialDate(partial)
+                    viewModel.getExpensesByPartialDate(partial)
                     showDateDialog = false
                 }) {
                     Text("適用")
@@ -257,7 +260,7 @@ fun ExpenseListScreen(
                 Button(onClick = {
                     val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
                     val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
-                    viewModel.filterByDateRange(from, to)
+                    viewModel.getExpensesByDateRange(from, to)
                     showDateRangeDialog = false
                 }) {
                     Text("適用")

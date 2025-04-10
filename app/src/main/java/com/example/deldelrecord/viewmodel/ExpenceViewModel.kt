@@ -17,6 +17,13 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private val _filteredExpenses = MutableLiveData<List<Expense>>()
     val filteredExpenses: LiveData<List<Expense>> = _filteredExpenses
 
+    fun insertExpense(expense: Expense) {
+        viewModelScope.launch {
+            dao.insertExpense(expense) // ← repositoryではなくdaoを直接呼ぶ
+        }
+    }
+
+
     fun getExpensesByAmountRange(min: Int, max: Int) {
         viewModelScope.launch {
             _filteredExpenses.value = dao.getExpensesByAmountRange(min, max)

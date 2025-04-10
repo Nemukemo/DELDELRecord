@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
+
 import java.util.*
 
 @Composable
@@ -71,13 +72,18 @@ fun ExpenseInputScreen(
                         date = "$selectedYear-${"%02d".format(selectedMonth)}-${"%02d".format(selectedDay)}",
                         memo = memo.ifBlank { null }
                     )
-                    viewModel.insertExpense(expense)
-                    // 必要ならメッセージ表示や画面遷移など
+                    viewModel.insertExpense(expense) // ← viewModel() を再取得せず直接呼び出し
+
+                    // 入力完了後の初期化（任意）
+                    amount = ""
+                    memo = ""
+                    selectedType = expenseTypes.first()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("確定")
             }
+
         }
     }
 }
