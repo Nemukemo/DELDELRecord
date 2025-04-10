@@ -1,0 +1,10 @@
+{
+    "languageServers": {
+      "kotlin": {
+        "command": "C:\\Users\\it232269.TSITCL\\kotlin-language-server\\server\\build\\install\\server\\bin\\kotlin-language-server.bat",
+        "args": [],
+        "languages": ["kotlin"]
+      }
+    }
+  }
+  
