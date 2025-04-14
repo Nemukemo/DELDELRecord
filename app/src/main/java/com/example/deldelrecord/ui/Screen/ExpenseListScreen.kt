@@ -1,5 +1,6 @@
 package com.example.deldelrecord.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +16,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+
 
 @Composable
 fun ExpenseListScreen(
@@ -70,30 +76,22 @@ fun ExpenseListScreen(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("絞り込み") },
             text = {
-                Column {
-                    Button(onClick = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    FilterCardOption("金額の上限／下限") {
                         showAmountDialog = true
                         showFilterDialog = false
-                    }) {
-                        Text("金額の上限／下限")
                     }
-                    Button(onClick = {
+                    FilterCardOption("出費の種類") {
                         showTypeDialog = true
                         showFilterDialog = false
-                    }) {
-                        Text("出費の種類")
                     }
-                    Button(onClick = {
+                    FilterCardOption("日付") {
                         showDateDialog = true
                         showFilterDialog = false
-                    }) {
-                        Text("日付")
                     }
-                    Button(onClick = {
+                    FilterCardOption("日付範囲") {
                         showDateRangeDialog = true
                         showFilterDialog = false
-                    }) {
-                        Text("日付範囲")
                     }
                 }
             },
@@ -105,6 +103,8 @@ fun ExpenseListScreen(
             }
         )
     }
+
+
 
     if (showAmountDialog) {
         var min by remember { mutableStateOf("") }
@@ -274,3 +274,23 @@ fun ExpenseListScreen(
         )
     }
 }
+
+// 共通で使うカード風のオプションコンポーネント
+@Composable
+fun FilterCardOption(label: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable(onClick = onClick),
+        elevation = 6.dp
+    ) {
+        Box(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
