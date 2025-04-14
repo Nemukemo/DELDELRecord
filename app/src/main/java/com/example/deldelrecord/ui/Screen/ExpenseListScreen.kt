@@ -6,21 +6,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-
 
 @Composable
 fun ExpenseListScreen(
@@ -32,7 +30,6 @@ fun ExpenseListScreen(
 
     val expenses = filteredExpenses ?: allExpenses
 
-    // ダイアログ状態
     var showFilterDialog by remember { mutableStateOf(false) }
     var showAmountDialog by remember { mutableStateOf(false) }
     var showTypeDialog by remember { mutableStateOf(false) }
@@ -46,8 +43,15 @@ fun ExpenseListScreen(
         ) {
             val totalAmount = expenses.sumOf { it.amount }
             Text("Total Amount: ¥$totalAmount")
-            Button(onClick = { showFilterDialog = true }) {
-                Text("絞り込み")
+            Button(
+                onClick = { showFilterDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier.height(48.dp)
+            ) {
+                Icon(Icons.Default.FilterList, contentDescription = "フィルター", tint = Color.White)
+                Spacer(Modifier.width(8.dp))
+                Text("絞り込み", color = Color.White)
             }
         }
 
@@ -57,7 +61,7 @@ fun ExpenseListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
-                    elevation = 4.dp
+                    elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text("種類: ${expense.type}")
@@ -69,12 +73,10 @@ fun ExpenseListScreen(
         }
     }
 
-    // ---- 以下はすべて絞り込みダイアログたち ----
-
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
-            title = { Text("絞り込み") },
+            title = { Text("絞り込み", color = Color.Black) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FilterCardOption("金額の上限／下限") {
@@ -97,14 +99,12 @@ fun ExpenseListScreen(
             },
             confirmButton = {},
             dismissButton = {
-                Button(onClick = { showFilterDialog = false }) {
-                    Text("閉じる")
+                TextButton(onClick = { showFilterDialog = false }) {
+                    Text("閉じる", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
     }
-
-
 
     if (showAmountDialog) {
         var min by remember { mutableStateOf("") }
@@ -130,18 +130,22 @@ fun ExpenseListScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    val lower = min.toIntOrNull() ?: 0
-                    val upper = max.toIntOrNull() ?: Int.MAX_VALUE
-                    viewModel.getExpensesByAmountRange(lower, upper)
-                    showAmountDialog = false
-                }) {
-                    Text("適用")
+                Button(
+                    onClick = {
+                        val lower = min.toIntOrNull() ?: 0
+                        val upper = max.toIntOrNull() ?: Int.MAX_VALUE
+                        viewModel.getExpensesByAmountRange(lower, upper)
+                        showAmountDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showAmountDialog = false }) {
-                    Text("キャンセル")
+                TextButton(onClick = { showAmountDialog = false }) {
+                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -175,16 +179,20 @@ fun ExpenseListScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    viewModel.getExpensesByTypes(selected)
-                    showTypeDialog = false
-                }) {
-                    Text("適用")
+                Button(
+                    onClick = {
+                        viewModel.getExpensesByTypes(selected)
+                        showTypeDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showTypeDialog = false }) {
-                    Text("キャンセル")
+                TextButton(onClick = { showTypeDialog = false }) {
+                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -206,24 +214,28 @@ fun ExpenseListScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    val y = year.padStart(4, '0')
-                    val m = month.padStart(2, '0')
-                    val d = day.padStart(2, '0')
-                    val partial = listOfNotNull(
-                        if (year.isNotBlank()) y else null,
-                        if (month.isNotBlank()) m else null,
-                        if (day.isNotBlank()) d else null
-                    ).joinToString("-")
-                    viewModel.getExpensesByPartialDate(partial)
-                    showDateDialog = false
-                }) {
-                    Text("適用")
+                Button(
+                    onClick = {
+                        val y = year.padStart(4, '0')
+                        val m = month.padStart(2, '0')
+                        val d = day.padStart(2, '0')
+                        val partial = listOfNotNull(
+                            if (year.isNotBlank()) y else null,
+                            if (month.isNotBlank()) m else null,
+                            if (day.isNotBlank()) d else null
+                        ).joinToString("-")
+                        viewModel.getExpensesByPartialDate(partial)
+                        showDateDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showDateDialog = false }) {
-                    Text("キャンセル")
+                TextButton(onClick = { showDateDialog = false }) {
+                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -257,25 +269,28 @@ fun ExpenseListScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
-                    val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
-                    viewModel.getExpensesByDateRange(from, to)
-                    showDateRangeDialog = false
-                }) {
-                    Text("適用")
+                Button(
+                    onClick = {
+                        val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
+                        val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
+                        viewModel.getExpensesByDateRange(from, to)
+                        showDateRangeDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
                 }
             },
             dismissButton = {
-                Button(onClick = { showDateRangeDialog = false }) {
-                    Text("キャンセル")
+                TextButton(onClick = { showDateRangeDialog = false }) {
+                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
     }
 }
 
-// 共通で使うカード風のオプションコンポーネント
 @Composable
 fun FilterCardOption(label: String, onClick: () -> Unit) {
     Card(
@@ -283,7 +298,7 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 6.dp)
             .clickable(onClick = onClick),
-        elevation = 6.dp
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Box(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -294,3 +309,4 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
     }
 }
 
+//ToDo: 絞り込みのボタンの日付フィルター関連のボタンをDEMOであったカレンダーから選ぶデザインに変える

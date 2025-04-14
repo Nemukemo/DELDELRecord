@@ -16,3 +16,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+//TODO: アプリ全体にライトテーマとダークテーマを設ける
