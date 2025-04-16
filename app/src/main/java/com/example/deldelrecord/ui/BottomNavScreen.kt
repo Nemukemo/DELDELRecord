@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,15 +19,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.deldelrecord.ui.Screen.SettingsScreen
 import com.example.deldelrecord.ui.screens.ExpenseInputScreen
 import com.example.deldelrecord.ui.screens.ExpenseListScreen
-import com.example.deldelrecord.ui.screens.RecognitionScreen
 
 // BottomNav用の画面定義
 sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector) {
     object Input : BottomNavItem("input", "手入力", Icons.Filled.Edit)
-    object Recognition : BottomNavItem("recognition", "画像認識", Icons.Filled.PhotoCamera)
     object List : BottomNavItem("list", "一覧", Icons.Filled.List)
+    object Settings : BottomNavItem("settings", "設定", Icons.Filled.Settings)
 }
 
 @Composable
@@ -36,8 +37,8 @@ fun BottomNavScreen() {
     // ナビゲーション用の画面リスト
     val bottomNavItems = listOf(
         BottomNavItem.Input,
-        BottomNavItem.Recognition,
-        BottomNavItem.List
+        BottomNavItem.List,
+        BottomNavItem.Settings
     )
 
     Scaffold(
@@ -69,8 +70,15 @@ fun BottomNavScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Input.route) { ExpenseInputScreen(navController) }
-            composable(BottomNavItem.Recognition.route) { RecognitionScreen() }
             composable(BottomNavItem.List.route) { ExpenseListScreen(navController) }
+            composable(BottomNavItem.Settings.route) {
+                SettingsScreen(
+                    isDarkTheme = false,
+                    onThemeToggle = { /* TODO */ },
+                    onExpenseTypeSettingsClick = { /* TODO */ }
+                )
+            }
+
         }
     }
 }
