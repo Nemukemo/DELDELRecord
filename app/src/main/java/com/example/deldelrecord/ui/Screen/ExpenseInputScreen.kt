@@ -87,3 +87,4 @@ fun ExpenseInputScreen(
         }
     }
 }
+//TODO: ExpenseListScreen.kt を参考にモダンなシンプルデザインにしてちょ
