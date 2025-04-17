@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,11 +26,8 @@ fun ExpenseListScreen(
     navController: NavController,
     viewModel: ExpenseViewModel = viewModel()
 ) {
-    //LiveDataの状態を監視し、全出費データと、フィルター後のデータを取得
     val allExpenses by viewModel.allExpenses.observeAsState(emptyList())
     val filteredExpenses by viewModel.filteredExpenses.observeAsState()
-
-    //フィルターされた出費アがあればそれを使用し、なければ全出費データを使用
     val expenses = filteredExpenses ?: allExpenses
 
     //各種ダイアログの表示状態をrememberで管理
@@ -39,33 +37,18 @@ fun ExpenseListScreen(
     var showDateDialog by remember { mutableStateOf(false) }
     var showDateRangeDialog by remember { mutableStateOf(false) }
 
-    /*レイアウトゾーン*/
-    //メインの横並びレイアウト
     Column(modifier = Modifier.fillMaxSize()) {
-        //上部の合計金額表示と表示絞り込みボタン
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
-        ) {
-            //出費合計金額を計算して表示する
-            val totalAmount = expenses.sumOf { it.amount }
-            Text("出費合計: ¥$totalAmount")
+        // Display total amount
+        val totalAmount = expenses.sumOf { it.amount }
+        Text(
+            text = "出費合計: ¥$totalAmount",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            style = MaterialTheme.typography.titleLarge,
+        )
 
-            // 絞り込みボタン（フィルター用ダイアログを表示）
-
-            Button(
-                onClick = { showFilterDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.height(48.dp)
-            ) {
-                Icon(Icons.Default.FilterList, contentDescription = "フィルター", tint = Color.White)
-                Spacer(Modifier.width(8.dp))
-                Text("絞り込み", color = Color.White)
-            }
-        }
-
-        //出費一覧を表示(LazyColumでリスト表示)
+        // 出費リスト
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(expenses) { expense ->
                 Card(
@@ -84,32 +67,45 @@ fun ExpenseListScreen(
         }
     }
 
-    //フィルターオプションのメインダイアログ
+    // Floating Action Button for filter
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        FloatingActionButton(
+            onClick = { showFilterDialog = true },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White,
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Icon(Icons.Default.FilterList, contentDescription = "フィルター")
+        }
+    }
+
+    // Filter dialog
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("絞り込み", color = Color.Black) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    //金額フィルターへの遷移
                     FilterCardOption("金額の上限／下限") {
+                        // Handle filter options
+                        showFilterDialog = false
                         showAmountDialog = true
-                        showFilterDialog = false
                     }
-                    //出費種類フィルターへの遷移
                     FilterCardOption("出費の種類") {
+                        showFilterDialog = false
                         showTypeDialog = true
-                        showFilterDialog = false
                     }
-                    //日付フィルターへの遷移
                     FilterCardOption("日付") {
+                        showFilterDialog = false
                         showDateDialog = true
-                        showFilterDialog = false
                     }
-                    //日付範囲フィルターへの遷移
                     FilterCardOption("日付範囲") {
-                        showDateRangeDialog = true
                         showFilterDialog = false
+                        showDateRangeDialog = true
                     }
                 }
             },
