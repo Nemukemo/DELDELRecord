@@ -25,24 +25,34 @@ fun ExpenseListScreen(
     navController: NavController,
     viewModel: ExpenseViewModel = viewModel()
 ) {
+    //LiveDataの状態を監視し、全出費データと、フィルター後のデータを取得
     val allExpenses by viewModel.allExpenses.observeAsState(emptyList())
     val filteredExpenses by viewModel.filteredExpenses.observeAsState()
 
+    //フィルターされた出費アがあればそれを使用し、なければ全出費データを使用
     val expenses = filteredExpenses ?: allExpenses
 
+    //各種ダイアログの表示状態をrememberで管理
     var showFilterDialog by remember { mutableStateOf(false) }
     var showAmountDialog by remember { mutableStateOf(false) }
     var showTypeDialog by remember { mutableStateOf(false) }
     var showDateDialog by remember { mutableStateOf(false) }
     var showDateRangeDialog by remember { mutableStateOf(false) }
 
+    /*レイアウトゾーン*/
+    //メインの横並びレイアウト
     Column(modifier = Modifier.fillMaxSize()) {
+        //上部の合計金額表示と表示絞り込みボタン
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth().padding(16.dp)
         ) {
+            //出費合計金額を計算して表示する
             val totalAmount = expenses.sumOf { it.amount }
-            Text("Total Amount: ¥$totalAmount")
+            Text("出費合計: ¥$totalAmount")
+
+            // 絞り込みボタン（フィルター用ダイアログを表示）
+
             Button(
                 onClick = { showFilterDialog = true },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -55,6 +65,7 @@ fun ExpenseListScreen(
             }
         }
 
+        //出費一覧を表示(LazyColumでリスト表示)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(expenses) { expense ->
                 Card(
@@ -73,24 +84,29 @@ fun ExpenseListScreen(
         }
     }
 
+    //フィルターオプションのメインダイアログ
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("絞り込み", color = Color.Black) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
+                    //金額フィルターへの遷移
                     FilterCardOption("金額の上限／下限") {
                         showAmountDialog = true
                         showFilterDialog = false
                     }
+                    //出費種類フィルターへの遷移
                     FilterCardOption("出費の種類") {
                         showTypeDialog = true
                         showFilterDialog = false
                     }
+                    //日付フィルターへの遷移
                     FilterCardOption("日付") {
                         showDateDialog = true
                         showFilterDialog = false
                     }
+                    //日付範囲フィルターへの遷移
                     FilterCardOption("日付範囲") {
                         showDateRangeDialog = true
                         showFilterDialog = false
@@ -106,6 +122,7 @@ fun ExpenseListScreen(
         )
     }
 
+    //金額フィルターのダイアログ
     if (showAmountDialog) {
         var min by remember { mutableStateOf("") }
         var max by remember { mutableStateOf("") }
@@ -115,12 +132,14 @@ fun ExpenseListScreen(
             title = { Text("金額フィルター") },
             text = {
                 Column {
+                    //下限の金額入力
                     OutlinedTextField(
                         value = min,
                         onValueChange = { min = it },
                         label = { Text("下限") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                    //上限の金額入力
                     OutlinedTextField(
                         value = max,
                         onValueChange = { max = it },
@@ -130,6 +149,7 @@ fun ExpenseListScreen(
                 }
             },
             confirmButton = {
+                //適用ボタン(ViewModelのメソッドを呼び出す)
                 Button(
                     onClick = {
                         val lower = min.toIntOrNull() ?: 0
@@ -151,6 +171,7 @@ fun ExpenseListScreen(
         )
     }
 
+    //出費種類フィルターのダイアログ
     if (showTypeDialog) {
         val types = listOf("修学費", "食費", "娯楽費")
         val selected = remember { mutableStateListOf<String>() }
@@ -198,6 +219,7 @@ fun ExpenseListScreen(
         )
     }
 
+    // 単一日付によるフィルター用ダイアログ
     if (showDateDialog) {
         var year by remember { mutableStateOf("") }
         var month by remember { mutableStateOf("") }
@@ -241,6 +263,7 @@ fun ExpenseListScreen(
         )
     }
 
+    // 日付範囲によるフィルター用ダイアログ
     if (showDateRangeDialog) {
         var fromYear by remember { mutableStateOf("") }
         var fromMonth by remember { mutableStateOf("") }
@@ -291,6 +314,7 @@ fun ExpenseListScreen(
     }
 }
 
+// ダイアログ内の各オプション表示用カード（クリック可能）
 @Composable
 fun FilterCardOption(label: String, onClick: () -> Unit) {
     Card(
@@ -310,3 +334,8 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
 }
 
 //ToDo: 絞り込みのボタンの日付フィルター関連のボタンをDEMOであったカレンダーから選ぶデザインに変える
+//TODO；合計金額を中央上(ヘッダー下)に表示する
+//TODO：絞り込みボタンをFABにする
+//ToDO：ダイアログ表示方法をボタン押して遷移ではなく全てダイアログ上に表示されるようにする
+//TODO：日付関連をカレンダーに変更する(なのでカレンダーだけはボタン残しておく形にするもしくは一番上に表示する)
+//TODO：ダイアログ内にリセットボタンの追加
