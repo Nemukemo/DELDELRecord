@@ -1,9 +1,11 @@
 package com.example.deldelrecord.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -37,51 +39,73 @@ fun ExpenseListScreen(
     var showDateDialog by remember { mutableStateOf(false) }
     var showDateRangeDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Display total amount
-        val totalAmount = expenses.sumOf { it.amount }
-        Text(
-            text = "出費合計: ¥$totalAmount",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            style = MaterialTheme.typography.titleLarge,
-        )
+    val totalAmount = expenses.sumOf { it.amount }
 
-        // 出費リスト
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(expenses) { expense ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text("種類: ${expense.type}")
-                        Text("金額: ¥${expense.amount}")
-                        Text("日付: ${expense.date}")
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showFilterDialog = (true) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Icon(Icons.Default.FilterList, contentDescription = "フィルター")
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // ラベル
+            Text(
+                text = "合計金額",
+                modifier = Modifier
+                    .padding(top = 24.dp, bottom = 8.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            // 金額表示
+            Text(
+                text = "¥${String.format("%,d", totalAmount)}円",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
+            )
+
+            // 出費リスト
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 16.dp)
+            ) {
+                itemsIndexed(expenses) { index, expense ->
+                    val isLast = index == expenses.lastIndex
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = if (isLast) 0.dp else 4.dp // 最後の項目だけ bottom 0
+                            ),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("種類: ${expense.type}")
+                            Text("金額: ¥${expense.amount}")
+                            Text("日付: ${expense.date}")
+                        }
                     }
                 }
             }
+
         }
     }
 
-    // Floating Action Button for filter
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
-    ) {
-        FloatingActionButton(
-            onClick = { showFilterDialog = true },
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
-            modifier = Modifier
-                .padding(16.dp)
-        ) {
-            Icon(Icons.Default.FilterList, contentDescription = "フィルター")
-        }
-    }
 
     // Filter dialog
     if (showFilterDialog) {
@@ -91,7 +115,6 @@ fun ExpenseListScreen(
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FilterCardOption("金額の上限／下限") {
-                        // Handle filter options
                         showFilterDialog = false
                         showAmountDialog = true
                     }
@@ -330,8 +353,9 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
 }
 
 //ToDo: 絞り込みのボタンの日付フィルター関連のボタンをDEMOであったカレンダーから選ぶデザインに変える
-//TODO；合計金額を中央上(ヘッダー下)に表示する
-//TODO：絞り込みボタンをFABにする
 //ToDO：ダイアログ表示方法をボタン押して遷移ではなく全てダイアログ上に表示されるようにする
 //TODO：日付関連をカレンダーに変更する(なのでカレンダーだけはボタン残しておく形にするもしくは一番上に表示する)
 //TODO：ダイアログ内にリセットボタンの追加
+
+//TODO:LazyColumnとNavBottomとの間にある余白をつぶしたい(優先度低め)
+
