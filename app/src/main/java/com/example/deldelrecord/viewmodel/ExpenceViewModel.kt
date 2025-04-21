@@ -6,6 +6,8 @@ import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.data.ExpenseDao
 import com.example.deldelrecord.data.ExpenseDatabase
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter as DataTimeFormatter
 
 class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -14,8 +16,14 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     // 全件取得を LiveData で変換して観察
     val allExpenses: LiveData<List<Expense>> = dao.getAllExpenses().asLiveData()
 
+    // 取得したデータをフィルタリングするための LiveData
     private val _filteredExpenses = MutableLiveData<List<Expense>>()
+
+    // フィルタリングされたデータを外部から観察できるようにする
     val filteredExpenses: LiveData<List<Expense>> = _filteredExpenses
+
+    var currentFilterCondition = FilterCondition()
+        private set
 
     fun insertExpense(expense: Expense) {
         viewModelScope.launch {
@@ -23,34 +31,33 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-
-    fun getExpensesByAmountRange(min: Int, max: Int) {
-        viewModelScope.launch {
-            _filteredExpenses.value = dao.getExpensesByAmountRange(min, max)
+    fun updateFilterCondition(type: FilterType, value: Any?) {
+        val formatter = DataTimeFormatter.ofPattern("yyyy-MM-dd")
+        when (type) {
+            FilterType.MIN_AMOUNT -> currentFilterCondition.minAmount = value as? Int
+            FilterType.MAX_AMOUNT -> currentFilterCondition.maxAmount = value as? Int
+            FilterType.TYPES      -> currentFilterCondition.types = value as? List<String>
+            FilterType.DATE_FROM       -> currentFilterCondition.dateFrom = (value as? String)?.let { LocalDate.parse(it,formatter) }
+            FilterType.DATE_TO    -> currentFilterCondition.dateTo = (value as? String)?.let { LocalDate.parse(it,formatter) }
         }
     }
 
-    fun getExpensesByTypes(types: List<String>) {
-        viewModelScope.launch {
-            _filteredExpenses.value = dao.getExpensesByTypes(types)
+    fun applyFilter() {
+        val all = allExpenses.value ?: return
+        _filteredExpenses.value = all.filter { expense ->
+            val f = currentFilterCondition
+            val localminAmount = f.minAmount ?: 0
+            val localmaxAmount = f.maxAmount ?: 0
+            val localType = f.types ?: emptyList()
+
+            val amountOk = (f.minAmount == null || expense.amount >= localminAmount) &&
+                    (f.maxAmount == null || expense.amount <= localmaxAmount)
+            val typeOk = f.types.isNullOrEmpty() || localType.contains(expense.type)
+            val dateOk = (f.dateFrom == null || expense.date >= f.dateFrom.toString()) &&
+                    (f.dateTo == null || expense.date <= f.dateTo.toString())
+
+            amountOk && typeOk && dateOk
         }
     }
 
-    fun getExpensesByDate(date: String) {
-        viewModelScope.launch {
-            _filteredExpenses.value = dao.getExpensesByDate(date)
-        }
-    }
-
-    fun getExpensesByPartialDate(partial: String) {
-        viewModelScope.launch {
-            _filteredExpenses.value = dao.getExpensesByPartialDate(partial)
-        }
-    }
-
-    fun getExpensesByDateRange(start: String, end: String) {
-        viewModelScope.launch {
-            _filteredExpenses.value = dao.getExpensesByDateRange(start, end)
-        }
-    }
 }

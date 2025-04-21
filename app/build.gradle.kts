@@ -29,8 +29,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+
+        isCoreLibraryDesugaringEnabled = true
+
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -53,6 +56,9 @@ dependencies {
 
     // Java ソースのみの場合は annotationProcessor も利用可能
     annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
 
     implementation("androidx.room:room-ktx:$room_version")
     implementation("androidx.room:room-rxjava2:$room_version")
