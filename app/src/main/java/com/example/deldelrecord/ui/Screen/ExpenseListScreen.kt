@@ -1,9 +1,11 @@
 package com.example.deldelrecord.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -11,6 +13,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,11 +28,8 @@ fun ExpenseListScreen(
     navController: NavController,
     viewModel: ExpenseViewModel = viewModel()
 ) {
-    //LiveDataの状態を監視し、全出費データと、フィルター後のデータを取得
     val allExpenses by viewModel.allExpenses.observeAsState(emptyList())
     val filteredExpenses by viewModel.filteredExpenses.observeAsState()
-
-    //フィルターされた出費アがあればそれを使用し、なければ全出費データを使用
     val expenses = filteredExpenses ?: allExpenses
 
     //各種ダイアログの表示状態をrememberで管理
@@ -39,77 +39,96 @@ fun ExpenseListScreen(
     var showDateDialog by remember { mutableStateOf(false) }
     var showDateRangeDialog by remember { mutableStateOf(false) }
 
-    /*レイアウトゾーン*/
-    //メインの横並びレイアウト
-    Column(modifier = Modifier.fillMaxSize()) {
-        //上部の合計金額表示と表示絞り込みボタン
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
-        ) {
-            //出費合計金額を計算して表示する
-            val totalAmount = expenses.sumOf { it.amount }
-            Text("出費合計: ¥$totalAmount")
+    val totalAmount = expenses.sumOf { it.amount }
 
-            // 絞り込みボタン（フィルター用ダイアログを表示）
-
-            Button(
-                onClick = { showFilterDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.height(48.dp)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showFilterDialog = (true) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                modifier = Modifier.padding(16.dp)
             ) {
-                Icon(Icons.Default.FilterList, contentDescription = "フィルター", tint = Color.White)
-                Spacer(Modifier.width(8.dp))
-                Text("絞り込み", color = Color.White)
+                Icon(Icons.Default.FilterList, contentDescription = "フィルター")
             }
         }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // ラベル
+            Text(
+                text = "合計金額",
+                modifier = Modifier
+                    .padding(top = 24.dp, bottom = 8.dp),
+                style = MaterialTheme.typography.titleMedium
+            )
 
-        //出費一覧を表示(LazyColumでリスト表示)
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(expenses) { expense ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text("種類: ${expense.type}")
-                        Text("金額: ¥${expense.amount}")
-                        Text("日付: ${expense.date}")
+            // 金額表示
+            Text(
+                text = "¥${String.format("%,d", totalAmount)}円",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
+            )
+
+            // 出費リスト
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 16.dp)
+            ) {
+                itemsIndexed(expenses) { index, expense ->
+                    val isLast = index == expenses.lastIndex
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                top = 4.dp,
+                                bottom = if (isLast) 0.dp else 4.dp // 最後の項目だけ bottom 0
+                            ),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("種類: ${expense.type}")
+                            Text("金額: ¥${expense.amount}")
+                            Text("日付: ${expense.date}")
+                        }
                     }
                 }
             }
+
         }
     }
 
-    //フィルターオプションのメインダイアログ
+
+    // Filter dialog
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
             title = { Text("絞り込み", color = Color.Black) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    //金額フィルターへの遷移
                     FilterCardOption("金額の上限／下限") {
+                        showFilterDialog = false
                         showAmountDialog = true
-                        showFilterDialog = false
                     }
-                    //出費種類フィルターへの遷移
                     FilterCardOption("出費の種類") {
+                        showFilterDialog = false
                         showTypeDialog = true
-                        showFilterDialog = false
                     }
-                    //日付フィルターへの遷移
                     FilterCardOption("日付") {
+                        showFilterDialog = false
                         showDateDialog = true
-                        showFilterDialog = false
                     }
-                    //日付範囲フィルターへの遷移
                     FilterCardOption("日付範囲") {
-                        showDateRangeDialog = true
                         showFilterDialog = false
+                        showDateRangeDialog = true
                     }
                 }
             },
@@ -334,8 +353,9 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
 }
 
 //ToDo: 絞り込みのボタンの日付フィルター関連のボタンをDEMOであったカレンダーから選ぶデザインに変える
-//TODO；合計金額を中央上(ヘッダー下)に表示する
-//TODO：絞り込みボタンをFABにする
 //ToDO：ダイアログ表示方法をボタン押して遷移ではなく全てダイアログ上に表示されるようにする
 //TODO：日付関連をカレンダーに変更する(なのでカレンダーだけはボタン残しておく形にするもしくは一番上に表示する)
 //TODO：ダイアログ内にリセットボタンの追加
+
+//TODO:LazyColumnとNavBottomとの間にある余白をつぶしたい(優先度低め)
+
