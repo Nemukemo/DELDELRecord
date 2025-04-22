@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
+import com.example.deldelrecord.viewmodel.FilterType
 
 @Composable
 fun ExpenseListScreen(
@@ -131,8 +132,20 @@ fun ExpenseListScreen(
                         showDateRangeDialog = true
                     }
                 }
+
             },
-            confirmButton = {},
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showFilterDialog = false
+                        viewModel.applyFilter()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
+                }
+            },
             dismissButton = {
                 TextButton(onClick = { showFilterDialog = false }) {
                     Text("閉じる", color = MaterialTheme.colorScheme.primary)
@@ -173,8 +186,16 @@ fun ExpenseListScreen(
                     onClick = {
                         val lower = min.toIntOrNull() ?: 0
                         val upper = max.toIntOrNull() ?: Int.MAX_VALUE
-                        viewModel.getExpensesByAmountRange(lower, upper)
+                        viewModel.updateFilterCondition(
+                            type = FilterType.MIN_AMOUNT,
+                            value = lower
+                        )
+                        viewModel.updateFilterCondition(
+                            type = FilterType.MAX_AMOUNT,
+                            value = upper
+                        )
                         showAmountDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
@@ -183,7 +204,11 @@ fun ExpenseListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAmountDialog = false }) {
+                TextButton(
+                    onClick = {
+                    showAmountDialog = false
+                    showFilterDialog = true
+                }) {
                     Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
@@ -221,8 +246,12 @@ fun ExpenseListScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.getExpensesByTypes(selected)
+                        viewModel.updateFilterCondition(
+                            type=FilterType.TYPES,
+                            value = selected.toList()
+                        )
                         showTypeDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
@@ -265,8 +294,12 @@ fun ExpenseListScreen(
                             if (month.isNotBlank()) m else null,
                             if (day.isNotBlank()) d else null
                         ).joinToString("-")
-                        viewModel.getExpensesByPartialDate(partial)
+                        viewModel.updateFilterCondition(
+                            type = FilterType.DATE_TO,
+                            value = partial
+                        )
                         showDateDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
@@ -315,8 +348,16 @@ fun ExpenseListScreen(
                     onClick = {
                         val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
                         val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
-                        viewModel.getExpensesByDateRange(from, to)
+                        viewModel.updateFilterCondition(
+                            type = FilterType.DATE_TO,
+                            value = from
+                        )
+                        viewModel.updateFilterCondition(
+                            type = FilterType.DATE_FROM,
+                            value = to
+                        )
                         showDateRangeDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
