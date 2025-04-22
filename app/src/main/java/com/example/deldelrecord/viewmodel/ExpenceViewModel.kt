@@ -60,4 +60,19 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    //フィルターリセット用
+    fun resetFilter() {
+        currentFilterCondition = FilterCondition()
+        _filteredExpenses.value = allExpenses.value
+    }
+
+    //フィルターをしているかどうかのフラグ用
+    fun isFiltered(): Boolean {
+        val f = currentFilterCondition
+        return f.minAmount != null || f.maxAmount != null || !f.types.isNullOrEmpty()
+                || f.dateFrom != null || f.dateTo != null
+    }
+
+
+
 }
