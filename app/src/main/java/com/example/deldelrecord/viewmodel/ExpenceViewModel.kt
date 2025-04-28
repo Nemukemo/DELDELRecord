@@ -80,20 +80,16 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         return f.minAmount != null || f.maxAmount != null || !f.types.isNullOrEmpty()
                 || f.dateFrom != null || f.dateTo != null
     }
-//TODO:こいつらなんとか実装しようね^^
-//MutableStateFlowとか使うんだぞ、
-//    fun setSingleDate(date: LocalDate?) {
-//        _filteredExpenses.value(
-//            singleDate = date,
-//            dateFrom = null,
-//            dateTo = null
-//        )
-//    }
-//    fun setDateRange(from: LocalDate?, to: LocalDate?) {
-//        _filteredExpenses.value(
-//            dateFrom = from,
-//            dateTo = to,
-//            singleDate = null
-//        )
-//    }
+    fun setSingleDate(date: LocalDate?) {
+        currentFilterCondition.dateSingle = date
+        currentFilterCondition.dateFrom = null
+        currentFilterCondition.dateTo = null
+    }
+
+    fun setDateRange(from: LocalDate?, to: LocalDate?) {
+        currentFilterCondition.dateFrom = from
+        currentFilterCondition.dateTo = to
+        currentFilterCondition.dateSingle = null
+    }
+
 }
