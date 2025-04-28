@@ -90,6 +90,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.2")
     implementation("androidx.compose.material3:material3:1.1.2") // ← Compose Material3 を入れる
 
+
     // アイコン（必要！）
     implementation("androidx.compose.material:material-icons-core:1.6.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")

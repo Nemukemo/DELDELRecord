@@ -1,5 +1,6 @@
 package com.example.deldelrecord.ui.screens
 
+import androidx.compose.material3.DatePicker
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -41,13 +45,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
 import com.example.deldelrecord.viewmodel.FilterType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseListScreen(
     navController: NavController,
@@ -132,7 +141,7 @@ fun ExpenseListScreen(
     }
 
 
-    // Filter dialog
+    // フィルターの一覧ダイアログ
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
@@ -182,8 +191,11 @@ fun ExpenseListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showFilterDialog = false }) {
-                    Text("閉じる", color = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = {
+                    showFilterDialog = false
+//                      viewModel.resetFilter()　こっちにする
+                }) {
+                    Text("リセット", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -304,50 +316,45 @@ fun ExpenseListScreen(
 
     // 単一日付によるフィルター用ダイアログ
     if (showDateDialog) {
-        var year by remember { mutableStateOf("") }
-        var month by remember { mutableStateOf("") }
-        var day by remember { mutableStateOf("") }
+        //カレンダーを呼び出す
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = System.currentTimeMillis()
+        )
 
-        AlertDialog(
-            onDismissRequest = { showDateDialog = false },
-            title = { Text("日付フィルター") },
-            text = {
-                Column {
-                    OutlinedTextField(value = year, onValueChange = { year = it }, label = { Text("年") })
-                    OutlinedTextField(value = month, onValueChange = { month = it }, label = { Text("月") })
-                    OutlinedTextField(value = day, onValueChange = { day = it }, label = { Text("日") })
-                }
-            },
+        // 日付選択時の処理
+        val onDateSelected: (Long?) -> Unit = { selectedDateMillis ->
+            selectedDateMillis?.let {
+                val selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
+                viewModel.updateFilterCondition(FilterType.DATE_FROM, selectedDate)
+            }
+        }
+
+        DatePickerDialog(
+            onDismissRequest = {showDateDialog = false},
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        val y = year.padStart(4, '0')
-                        val m = month.padStart(2, '0')
-                        val d = day.padStart(2, '0')
-                        val partial = listOfNotNull(
-                            if (year.isNotBlank()) y else null,
-                            if (month.isNotBlank()) m else null,
-                            if (day.isNotBlank()) d else null
-                        ).joinToString("-")
-                        viewModel.updateFilterCondition(
-                            type = FilterType.DATE_TO,
-                            value = partial
-                        )
-                        showDateDialog = false
-                        showFilterDialog = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text("適用", color = Color.White)
+                    onDateSelected(datePickerState.selectedDateMillis)
+                    showDateDialog = false
+                    showFilterDialog = true
+                }) {
+                    Text("適用")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDateDialog = false }) {
-                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = {
+                    showDateDialog = false
+                    showFilterDialog = true
+                }) {
+                    Text("キャンセル")
                 }
             }
-        )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
+            )
+        }
     }
 
     // 日付範囲によるフィルター用ダイアログ
@@ -437,6 +444,5 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
 //ToDO：ダイアログ表示方法をボタン押して遷移ではなく全てダイアログ上に表示されるようにする
 //TODO：日付関連をカレンダーに変更する(なのでカレンダーだけはボタン残しておく形にするもしくは一番上に表示する)
 //TODO：ダイアログ内にリセットボタンの追加
-
 //TODO:LazyColumnとNavBottomとの間にある余白をつぶしたい(優先度低め)
 
