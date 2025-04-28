@@ -1,5 +1,6 @@
 package com.example.deldelrecord.ui.screens
 
+import android.widget.Toast
 import androidx.compose.material3.DatePicker
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,7 @@ import androidx.navigation.NavController
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
 import com.example.deldelrecord.viewmodel.FilterType
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Date
 import java.util.Locale
 
@@ -194,8 +196,7 @@ fun ExpenseListScreen(
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showFilterDialog = false
-//                      viewModel.resetFilter()　こっちにする
+                    viewModel.resetFilter()
                 }) {
                     Text("リセット", color = MaterialTheme.colorScheme.primary)
                 }
@@ -327,7 +328,8 @@ fun ExpenseListScreen(
         val onDateSelected: (Long?) -> Unit = { selectedDateMillis ->
             selectedDateMillis?.let {
                 val selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
-                viewModel.updateFilterCondition(FilterType.DATE_FROM, selectedDate)
+                val localDate = LocalDate.parse(selectedDate)
+                viewModel.setSingleDate(localDate)
             }
         }
 
@@ -366,8 +368,9 @@ fun ExpenseListScreen(
         val onDateRangeSelected:(Long,Long) -> Unit = { startDateMillis, endDateMillis ->
             val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startDateMillis))
             val endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(endDateMillis))
-            viewModel.updateFilterCondition(FilterType.DATE_FROM, startDate)
-            viewModel.updateFilterCondition(FilterType.DATE_TO, endDate)
+            val localStartDate = LocalDate.parse(startDate)
+            val localEndDate = LocalDate.parse(endDate)
+            viewModel.setDateRange(localStartDate,localEndDate)
         }
 
         DatePickerDialog(
