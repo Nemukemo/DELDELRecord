@@ -88,3 +88,4 @@ fun ExpenseInputScreen(
     }
 }
 //TODO: ExpenseListScreen.kt を参考にモダンなシンプルデザインにしてちょ
+//TODO: 入力完了時に誤った場合に削除できるようにしたい。具体的な構想としてはtoastをタップした際に削除しますかのダイアログを出すとか

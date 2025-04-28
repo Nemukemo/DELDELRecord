@@ -1,7 +1,5 @@
 package com.example.deldelrecord.ui.screens
 
-import android.widget.Toast
-import androidx.compose.material3.DatePicker
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -441,5 +439,7 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
     }
 }
 
-
+//TODO:出費タイプに応じた背景色
+//TODO:リストのアイテムをタップした時に、出費情報をまとめたポップアップの表示(現状はダイアログでメモを含む表示してok,editボタンで編集を実装したい)
+//TODO：ソートした結果が０件になった場合、別のソートを促す表示を行う
 
