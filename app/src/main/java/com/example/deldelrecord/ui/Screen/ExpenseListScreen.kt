@@ -1,28 +1,64 @@
 package com.example.deldelrecord.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.material3.DatePicker
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
+import com.example.deldelrecord.viewmodel.FilterType
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseListScreen(
     navController: NavController,
@@ -107,11 +143,22 @@ fun ExpenseListScreen(
     }
 
 
-    // Filter dialog
+    // フィルターの一覧ダイアログ
     if (showFilterDialog) {
         AlertDialog(
             onDismissRequest = { showFilterDialog = false },
-            title = { Text("絞り込み", color = Color.Black) },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("絞り込み", color = Color.Black)
+                    IconButton(onClick = { showFilterDialog = false }) {
+                        Icon(Icons.Default.Close, contentDescription = "閉じる")
+                    }
+                }
+            },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     FilterCardOption("金額の上限／下限") {
@@ -131,11 +178,26 @@ fun ExpenseListScreen(
                         showDateRangeDialog = true
                     }
                 }
+
             },
-            confirmButton = {},
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showFilterDialog = false
+                        viewModel.applyFilter()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text("適用", color = Color.White)
+                }
+            },
             dismissButton = {
-                TextButton(onClick = { showFilterDialog = false }) {
-                    Text("閉じる", color = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = {
+                    showFilterDialog = false
+//                      viewModel.resetFilter()　こっちにする
+                }) {
+                    Text("リセット", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )
@@ -173,8 +235,16 @@ fun ExpenseListScreen(
                     onClick = {
                         val lower = min.toIntOrNull() ?: 0
                         val upper = max.toIntOrNull() ?: Int.MAX_VALUE
-                        viewModel.getExpensesByAmountRange(lower, upper)
+                        viewModel.updateFilterCondition(
+                            type = FilterType.MIN_AMOUNT,
+                            value = lower
+                        )
+                        viewModel.updateFilterCondition(
+                            type = FilterType.MAX_AMOUNT,
+                            value = upper
+                        )
                         showAmountDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
@@ -183,7 +253,11 @@ fun ExpenseListScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showAmountDialog = false }) {
+                TextButton(
+                    onClick = {
+                    showAmountDialog = false
+                    showFilterDialog = true
+                }) {
                     Text("キャンセル", color = MaterialTheme.colorScheme.primary)
                 }
             }
@@ -221,8 +295,12 @@ fun ExpenseListScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.getExpensesByTypes(selected)
+                        viewModel.updateFilterCondition(
+                            type=FilterType.TYPES,
+                            value = selected.toList()
+                        )
                         showTypeDialog = false
+                        showFilterDialog = true
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = MaterialTheme.shapes.medium
@@ -240,96 +318,99 @@ fun ExpenseListScreen(
 
     // 単一日付によるフィルター用ダイアログ
     if (showDateDialog) {
-        var year by remember { mutableStateOf("") }
-        var month by remember { mutableStateOf("") }
-        var day by remember { mutableStateOf("") }
+        //カレンダーを呼び出す
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = System.currentTimeMillis()
+        )
 
-        AlertDialog(
-            onDismissRequest = { showDateDialog = false },
-            title = { Text("日付フィルター") },
-            text = {
-                Column {
-                    OutlinedTextField(value = year, onValueChange = { year = it }, label = { Text("年") })
-                    OutlinedTextField(value = month, onValueChange = { month = it }, label = { Text("月") })
-                    OutlinedTextField(value = day, onValueChange = { day = it }, label = { Text("日") })
-                }
-            },
+        // 日付選択時の処理
+        val onDateSelected: (Long?) -> Unit = { selectedDateMillis ->
+            selectedDateMillis?.let {
+                val selectedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
+                viewModel.updateFilterCondition(FilterType.DATE_FROM, selectedDate)
+            }
+        }
+
+        DatePickerDialog(
+            onDismissRequest = {showDateDialog = false},
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        val y = year.padStart(4, '0')
-                        val m = month.padStart(2, '0')
-                        val d = day.padStart(2, '0')
-                        val partial = listOfNotNull(
-                            if (year.isNotBlank()) y else null,
-                            if (month.isNotBlank()) m else null,
-                            if (day.isNotBlank()) d else null
-                        ).joinToString("-")
-                        viewModel.getExpensesByPartialDate(partial)
-                        showDateDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Text("適用", color = Color.White)
+                    onDateSelected(datePickerState.selectedDateMillis)
+                    showDateDialog = false
+                    showFilterDialog = true
+                }) {
+                    Text("適用")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDateDialog = false }) {
-                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = {
+                    showDateDialog = false
+                    showFilterDialog = true
+                }) {
+                    Text("キャンセル")
                 }
             }
-        )
+        ) {
+            DatePicker(
+                state = datePickerState,
+                showModeToggle = false
+            )
+        }
     }
 
     // 日付範囲によるフィルター用ダイアログ
     if (showDateRangeDialog) {
-        var fromYear by remember { mutableStateOf("") }
-        var fromMonth by remember { mutableStateOf("") }
-        var fromDay by remember { mutableStateOf("") }
+        val dateRangePickerState = rememberDateRangePickerState()
 
-        var toYear by remember { mutableStateOf("") }
-        var toMonth by remember { mutableStateOf("") }
-        var toDay by remember { mutableStateOf("") }
+        val onDateRangeSelected:(Long,Long) -> Unit = { startDateMillis, endDateMillis ->
+            val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startDateMillis))
+            val endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(endDateMillis))
+            viewModel.updateFilterCondition(FilterType.DATE_FROM, startDate)
+            viewModel.updateFilterCondition(FilterType.DATE_TO, endDate)
+        }
 
-        AlertDialog(
-            onDismissRequest = { showDateRangeDialog = false },
-            title = { Text("日付範囲フィルター") },
-            text = {
-                Column {
-                    Text("開始日")
-                    OutlinedTextField(value = fromYear, onValueChange = { fromYear = it }, label = { Text("年") })
-                    OutlinedTextField(value = fromMonth, onValueChange = { fromMonth = it }, label = { Text("月") })
-                    OutlinedTextField(value = fromDay, onValueChange = { fromDay = it }, label = { Text("日") })
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("終了日")
-                    OutlinedTextField(value = toYear, onValueChange = { toYear = it }, label = { Text("年") })
-                    OutlinedTextField(value = toMonth, onValueChange = { toMonth = it }, label = { Text("月") })
-                    OutlinedTextField(value = toDay, onValueChange = { toDay = it }, label = { Text("日") })
-                }
-            },
+        DatePickerDialog(
+            onDismissRequest = {showDateRangeDialog = false},
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
-                        val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
-                        viewModel.getExpensesByDateRange(from, to)
+                        onDateRangeSelected(
+                            dateRangePickerState.selectedStartDateMillis ?: 0L,
+                            dateRangePickerState.selectedEndDateMillis ?: 0L
+                        )
                         showDateRangeDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = MaterialTheme.shapes.medium
+                        showFilterDialog = true
+                    }
                 ) {
-                    Text("適用", color = Color.White)
+                    Text("適用")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDateRangeDialog = false }) {
-                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
+                TextButton(
+                    onClick = {
+                        showDateRangeDialog = false
+                        showFilterDialog = true
+                    }
+                ) {
+                    Text("キャンセル")
                 }
             }
-        )
+        ) {
+            DateRangePicker(
+                state = dateRangePickerState,
+                title = {
+                    Text(
+                        text = "範囲を選んでね💛"
+                    )
+                },
+                showModeToggle = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+                    .padding(16.dp)
+            )
+        }
     }
 }
 
@@ -343,7 +424,12 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Box(modifier = Modifier.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = false, // Replace with a state variable to track the checkbox state
+                onCheckedChange = { /* Handle checkbox state change */ }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge
@@ -352,10 +438,5 @@ fun FilterCardOption(label: String, onClick: () -> Unit) {
     }
 }
 
-//ToDo: 絞り込みのボタンの日付フィルター関連のボタンをDEMOであったカレンダーから選ぶデザインに変える
-//ToDO：ダイアログ表示方法をボタン押して遷移ではなく全てダイアログ上に表示されるようにする
-//TODO：日付関連をカレンダーに変更する(なのでカレンダーだけはボタン残しておく形にするもしくは一番上に表示する)
-//TODO：ダイアログ内にリセットボタンの追加
 
-//TODO:LazyColumnとNavBottomとの間にある余白をつぶしたい(優先度低め)
 

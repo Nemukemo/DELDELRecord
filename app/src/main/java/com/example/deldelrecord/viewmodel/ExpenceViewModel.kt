@@ -22,16 +22,19 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     // フィルタリングされたデータを外部から観察できるようにする
     val filteredExpenses: LiveData<List<Expense>> = _filteredExpenses
 
+
     // フィルタリング条件を保持するための構造体
     var currentFilterCondition = FilterCondition()
         private set
 
+    //DBに追加を行うメソッド
     fun insertExpense(expense: Expense) {
         viewModelScope.launch {
             dao.insertExpense(expense) // ← repositoryではなくdaoを直接呼ぶ
         }
     }
 
+    //フィルタリングを適用するためのデータクラス
     fun updateFilterCondition(type: FilterType, value: Any?) {
         val formatter = DataTimeFormatter.ofPattern("yyyy-MM-dd")
         when (type) {
@@ -44,6 +47,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    // フィルタリング条件を適用してデータをフィルタリングするメソッド
     fun applyFilter() {
         val all = allExpenses.value ?: return
         _filteredExpenses.value = all.filter { expense ->
