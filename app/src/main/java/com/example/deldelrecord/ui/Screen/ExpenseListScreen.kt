@@ -25,6 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -359,60 +361,56 @@ fun ExpenseListScreen(
 
     // 日付範囲によるフィルター用ダイアログ
     if (showDateRangeDialog) {
-        var fromYear by remember { mutableStateOf("") }
-        var fromMonth by remember { mutableStateOf("") }
-        var fromDay by remember { mutableStateOf("") }
+        val dateRangePickerState = rememberDateRangePickerState()
 
-        var toYear by remember { mutableStateOf("") }
-        var toMonth by remember { mutableStateOf("") }
-        var toDay by remember { mutableStateOf("") }
+        val onDateRangeSelected:(Long,Long) -> Unit = { startDateMillis, endDateMillis ->
+            val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(startDateMillis))
+            val endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(endDateMillis))
+            viewModel.updateFilterCondition(FilterType.DATE_FROM, startDate)
+            viewModel.updateFilterCondition(FilterType.DATE_TO, endDate)
+        }
 
-        AlertDialog(
-            onDismissRequest = { showDateRangeDialog = false },
-            title = { Text("日付範囲フィルター") },
-            text = {
-                Column {
-                    Text("開始日")
-                    OutlinedTextField(value = fromYear, onValueChange = { fromYear = it }, label = { Text("年") })
-                    OutlinedTextField(value = fromMonth, onValueChange = { fromMonth = it }, label = { Text("月") })
-                    OutlinedTextField(value = fromDay, onValueChange = { fromDay = it }, label = { Text("日") })
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("終了日")
-                    OutlinedTextField(value = toYear, onValueChange = { toYear = it }, label = { Text("年") })
-                    OutlinedTextField(value = toMonth, onValueChange = { toMonth = it }, label = { Text("月") })
-                    OutlinedTextField(value = toDay, onValueChange = { toDay = it }, label = { Text("日") })
-                }
-            },
+        DatePickerDialog(
+            onDismissRequest = {showDateRangeDialog = false},
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
-                        val from = "${fromYear.padStart(4, '0')}-${fromMonth.padStart(2, '0')}-${fromDay.padStart(2, '0')}"
-                        val to = "${toYear.padStart(4, '0')}-${toMonth.padStart(2, '0')}-${toDay.padStart(2, '0')}"
-                        viewModel.updateFilterCondition(
-                            type = FilterType.DATE_TO,
-                            value = from
-                        )
-                        viewModel.updateFilterCondition(
-                            type = FilterType.DATE_FROM,
-                            value = to
+                        onDateRangeSelected(
+                            dateRangePickerState.selectedStartDateMillis ?: 0L,
+                            dateRangePickerState.selectedEndDateMillis ?: 0L
                         )
                         showDateRangeDialog = false
                         showFilterDialog = true
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = MaterialTheme.shapes.medium
+                    }
                 ) {
-                    Text("適用", color = Color.White)
+                    Text("適用")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDateRangeDialog = false }) {
-                    Text("キャンセル", color = MaterialTheme.colorScheme.primary)
+                TextButton(
+                    onClick = {
+                        showDateRangeDialog = false
+                        showFilterDialog = true
+                    }
+                ) {
+                    Text("キャンセル")
                 }
             }
-        )
+        ) {
+            DateRangePicker(
+                state = dateRangePickerState,
+                title = {
+                    Text(
+                        text = "範囲を選んでね💛"
+                    )
+                },
+                showModeToggle = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+                    .padding(16.dp)
+            )
+        }
     }
 }
 
