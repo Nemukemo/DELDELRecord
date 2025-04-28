@@ -22,6 +22,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     // フィルタリングされたデータを外部から観察できるようにする
     val filteredExpenses: LiveData<List<Expense>> = _filteredExpenses
 
+    // フィルタリング条件を保持するための構造体
     var currentFilterCondition = FilterCondition()
         private set
 
@@ -37,6 +38,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             FilterType.MIN_AMOUNT -> currentFilterCondition.minAmount = value as? Int
             FilterType.MAX_AMOUNT -> currentFilterCondition.maxAmount = value as? Int
             FilterType.TYPES      -> currentFilterCondition.types = value as? List<String>
+            FilterType.DATE_SINGLE -> currentFilterCondition.dateSingle = (value as? String)?.let { LocalDate.parse(it,formatter) }
             FilterType.DATE_FROM       -> currentFilterCondition.dateFrom = (value as? String)?.let { LocalDate.parse(it,formatter) }
             FilterType.DATE_TO    -> currentFilterCondition.dateTo = (value as? String)?.let { LocalDate.parse(it,formatter) }
         }
@@ -53,11 +55,41 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             val amountOk = (f.minAmount == null || expense.amount >= localminAmount) &&
                     (f.maxAmount == null || expense.amount <= localmaxAmount)
             val typeOk = f.types.isNullOrEmpty() || localType.contains(expense.type)
-            val dateOk = (f.dateFrom == null || expense.date >= f.dateFrom.toString()) &&
-                    (f.dateTo == null || expense.date <= f.dateTo.toString())
+            val dateOk = when {
+                f.dateSingle != null -> expense.date == f.dateSingle.toString()
+                f.dateFrom != null || f.dateTo != null -> {
+                    (f.dateFrom == null || expense.date >= f.dateFrom.toString()) &&
+                            (f.dateTo == null || expense.date <= f.dateTo.toString())
+                }
 
+                else -> true // どちらも指定なしなら通す
+            }
             amountOk && typeOk && dateOk
         }
+    }
+
+    //フィルターリセット用
+    fun resetFilter() {
+        currentFilterCondition = FilterCondition()
+        _filteredExpenses.value = allExpenses.value
+    }
+
+    //フィルターをしているかどうかのフラグ用
+    fun isFiltered(): Boolean {
+        val f = currentFilterCondition
+        return f.minAmount != null || f.maxAmount != null || !f.types.isNullOrEmpty()
+                || f.dateFrom != null || f.dateTo != null
+    }
+    fun setSingleDate(date: LocalDate?) {
+        currentFilterCondition.dateSingle = date
+        currentFilterCondition.dateFrom = null
+        currentFilterCondition.dateTo = null
+    }
+
+    fun setDateRange(from: LocalDate?, to: LocalDate?) {
+        currentFilterCondition.dateFrom = from
+        currentFilterCondition.dateTo = to
+        currentFilterCondition.dateSingle = null
     }
 
 }
