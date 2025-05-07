@@ -440,7 +440,18 @@ fun ExpenseListScreen(
                 TextButton(onClick = { showExpenseDialog = false }) {
                     Text("OK")
                 }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    selectedExpense?.let {
+                        viewModel.deleteExpense(it.id)
+                    }
+                    showExpenseDialog = false
+                }) {
+                    Text("削除", color = Color.Red)
+                }
             }
+
         )
     }
 
