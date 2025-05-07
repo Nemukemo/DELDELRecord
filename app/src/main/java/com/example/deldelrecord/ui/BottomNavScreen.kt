@@ -20,7 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.deldelrecord.ui.Screen.SettingsScreen
 import com.example.deldelrecord.ui.screens.ExpenseInputScreen
-import com.example.deldelrecord.ui.screens.ExpenseListScreen
+import com.example.deldelrecord.ui.Screen.ExpenseListScreen
 
 // BottomNav用の画面定義
 sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector) {
