@@ -1,4 +1,4 @@
-package com.example.deldelrecord.ui.screens
+package com.example.deldelrecord.ui.Screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
 import com.example.deldelrecord.viewmodel.FilterType
 import java.text.SimpleDateFormat
@@ -74,6 +75,10 @@ fun ExpenseListScreen(
     var showTypeDialog by remember { mutableStateOf(false) }
     var showDateDialog by remember { mutableStateOf(false) }
     var showDateRangeDialog by remember { mutableStateOf(false) }
+
+    var selectedExpense by remember { mutableStateOf<Expense?>(null) }
+    var showExpenseDialog by remember { mutableStateOf(false) }
+
 
     val totalAmount = expenses.sumOf { it.amount }
 
@@ -126,8 +131,12 @@ fun ExpenseListScreen(
                             .fillMaxWidth()
                             .padding(
                                 top = 4.dp,
-                                bottom = if (isLast) 0.dp else 4.dp // 最後の項目だけ bottom 0
-                            ),
+                                bottom = if (isLast) 0.dp else 4.dp
+                            )
+                            .clickable {
+                                selectedExpense = expense
+                                showExpenseDialog = true
+                            },
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -413,6 +422,28 @@ fun ExpenseListScreen(
             )
         }
     }
+
+    if (showExpenseDialog && selectedExpense != null) {
+        AlertDialog(
+            onDismissRequest = { showExpenseDialog = false },
+            title = {
+                Text(text = "出費の詳細")
+            },
+            text = {
+                Column {
+                    Text("種類: ${selectedExpense!!.type}")
+                    Text("金額: ¥${selectedExpense!!.amount}")
+                    Text("日付: ${selectedExpense!!.date}")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showExpenseDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
 }
 
 // ダイアログ内の各オプション表示用カード（クリック可能）
