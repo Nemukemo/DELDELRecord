@@ -1,6 +1,7 @@
 package com.example.deldelrecord.data
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 interface ExpenseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: Expense)
+
+    @Delete
+    suspend fun deleteExpense(expense: Expense)
 
     // 通常の全件取得を Flow で返す（UI更新に強い）
     @Query("SELECT * FROM expenses ORDER BY date DESC")
