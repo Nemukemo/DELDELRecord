@@ -33,6 +33,12 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             dao.insertExpense(expense) // ← repositoryではなくdaoを直接呼ぶ
         }
     }
+    //DBから削除を行うメソッド
+    fun deleteExpense(expenseId: Int) {
+        viewModelScope.launch {
+            dao.deleteExpenseById(expenseId)
+        }
+    }
 
     //フィルタリングを適用するためのデータクラス
     fun updateFilterCondition(type: FilterType, value: Any?) {
