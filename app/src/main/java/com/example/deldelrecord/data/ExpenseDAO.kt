@@ -12,8 +12,8 @@ interface ExpenseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: Expense)
 
-    @Delete
-    suspend fun deleteExpense(expense: Expense)
+    @Query("DELETE FROM expenses WHERE id = :expenseId")
+    suspend fun deleteExpenseById(expenseId: Int)
 
     // 通常の全件取得を Flow で返す（UI更新に強い）
     @Query("SELECT * FROM expenses ORDER BY date DESC")
