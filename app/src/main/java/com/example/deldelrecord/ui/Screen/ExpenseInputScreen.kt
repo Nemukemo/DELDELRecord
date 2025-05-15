@@ -3,8 +3,11 @@ package com.example.deldelrecord.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -82,6 +85,19 @@ fun ExpenseInputScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("確定")
+            }
+
+            // ExpenceInput_calendar.ktへの遷移ボタン
+            androidx.compose.material3.Button(
+                onClick = {
+                    navController.navigate("ExpenseInput_calendar")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                androidx.compose.material3.Text("日付を入力したいあなたへ", color = Color.White)
             }
 
         }

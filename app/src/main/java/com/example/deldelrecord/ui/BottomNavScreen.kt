@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.deldelrecord.ui.Screen.ExpenceInput_calendar
 import com.example.deldelrecord.ui.Screen.SettingsScreen
 import com.example.deldelrecord.ui.screens.ExpenseInputScreen
 import com.example.deldelrecord.ui.Screen.ExpenseListScreen
@@ -28,6 +29,8 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: Image
     object List : BottomNavItem("list", "一覧", Icons.Filled.List)
     object Settings : BottomNavItem("settings", "設定", Icons.Filled.Settings)
 }
+
+
 
 @Composable
 fun BottomNavScreen() {
@@ -76,6 +79,10 @@ fun BottomNavScreen() {
                     onThemeToggle = { /* TODO */ },
                     onExpenseTypeSettingsClick = { /* TODO */ }
                 )
+            }
+
+            composable("ExpenseInput_calendar") {
+                ExpenceInput_calendar(navController)
             }
 
         }
