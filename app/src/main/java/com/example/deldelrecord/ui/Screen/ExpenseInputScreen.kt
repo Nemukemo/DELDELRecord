@@ -1,11 +1,14 @@
 package com.example.deldelrecord.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -13,9 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
-
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseInputScreen(
     navController: NavController,
@@ -34,7 +37,10 @@ fun ExpenseInputScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("手入力画面") })
+            TopAppBar(
+                title = { Text("支出入力", style = MaterialTheme.typography.titleLarge) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            )
         }
     ) { padding ->
         Column(
@@ -42,66 +48,79 @@ fun ExpenseInputScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it.filter { char -> char.isDigit() } },
+                onValueChange = { input ->
+                    amount = input.filter { it.isDigit() }
+                },
                 label = { Text("金額") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
-            Text("出費の種類")
+
+            Text("出費の種類", style = MaterialTheme.typography.titleMedium)
             expenseTypes.forEach { type ->
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = (selectedType == type),
+                            onClick = { selectedType = type }
+                        )
+                        .padding(vertical = 4.dp)
+                ) {
                     RadioButton(
                         selected = (selectedType == type),
                         onClick = { selectedType = type }
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(text = type)
                 }
             }
+
             OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
                 label = { Text("メモ (任意)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
+
             Button(
                 onClick = {
-                    val expense = Expense(
-                        amount = amount.toIntOrNull() ?: 0,
-                        type = selectedType,
-                        date = "$selectedYear-${"%02d".format(selectedMonth)}-${"%02d".format(selectedDay)}",
-                        memo = memo.ifBlank { null }
-                    )
-                    viewModel.insertExpense(expense) // ← viewModel() を再取得せず直接呼び出し
-
-                    // 入力完了後の初期化（任意）
-                    amount = ""
-                    memo = ""
-                    selectedType = expenseTypes.first()
+                    val expenseAmount = amount.toIntOrNull()
+                    if (expenseAmount != null && expenseAmount > 0) {
+                        val expense = Expense(
+                            amount = expenseAmount,
+                            type = selectedType,
+                            date = "$selectedYear-${"%02d".format(selectedMonth)}-${"%02d".format(selectedDay)}",
+                            memo = memo.ifBlank { null }
+                        )
+                        viewModel.insertExpense(expense)
+                        amount = ""
+                        memo = ""
+                        selectedType = expenseTypes.first()
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("確定")
-            }
-
-            // ExpenceInput_calendar.ktへの遷移ボタン
-            androidx.compose.material3.Button(
-                onClick = {
-                    navController.navigate("ExpenseInput_calendar")
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                androidx.compose.material3.Text("日付を入力したいあなたへ", color = Color.White)
+                Text("確定", color = Color.White)
             }
 
+            TextButton(
+                onClick = { navController.navigate("ExpenseInput_calendar") },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("日付を入力したいあなたへ", color = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }
-//TODO: ExpenseListScreen.kt を参考にモダンなシンプルデザインにしてちょ
-//TODO: 入力完了時に誤った場合に削除できるようにしたい。具体的な構想としてはtoastをタップした際に削除しますかのダイアログを出すとか

@@ -1,25 +1,22 @@
-package com.example.deldelrecord.ui.Screen
+package com.example.deldelrecord.ui.screens
 
-import android.app.DatePickerDialog
-import android.widget.DatePicker
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.deldelrecord.data.Expense
 import com.example.deldelrecord.viewmodel.ExpenseViewModel
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,16 +30,20 @@ fun ExpenceInput_calendar(
     val expenseTypes = listOf("修学費", "食費", "娯楽費")
     var selectedType by remember { mutableStateOf(expenseTypes.first()) }
 
-
-    // 初期日付
     val calendar = Calendar.getInstance()
     var selectedDateMillis by remember { mutableStateOf(calendar.timeInMillis) }
     var showDateSelectDialog by remember { mutableStateOf(false) }
 
+    val formattedDate = remember(selectedDateMillis) {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(selectedDateMillis))
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("手入力画面") })
+            TopAppBar(
+                title = { Text("支出入力", style = MaterialTheme.typography.titleLarge) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            )
         }
     ) { padding ->
         Column(
@@ -50,37 +51,43 @@ fun ExpenceInput_calendar(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Button(onClick = {navController.popBackStack()}) {
-                Text("戻る")
-            }
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it.filter { char -> char.isDigit() } },
+                onValueChange = { input ->
+                    amount = input.filter { it.isDigit() }
+                },
                 label = { Text("金額") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
 
-            Text("出費の種類")
+            Text("出費の種類", style = MaterialTheme.typography.titleMedium)
             expenseTypes.forEach { type ->
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = (selectedType == type),
+                            onClick = { selectedType = type }
+                        )
+                        .padding(vertical = 4.dp)
+                ) {
                     RadioButton(
                         selected = (selectedType == type),
                         onClick = { selectedType = type }
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(text = type)
                 }
             }
 
-            // 日付表示と選択
-            val formattedDate = remember(selectedDateMillis) {
-                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(selectedDateMillis))
-            }
-
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("選択日付: $formattedDate")
@@ -89,71 +96,66 @@ fun ExpenceInput_calendar(
                 }
             }
 
-
             OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
                 label = { Text("メモ (任意)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             Button(
                 onClick = {
-                    val formattedDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .format(Date(selectedDateMillis))
-
-                    val expense = Expense(
-                        amount = amount.toIntOrNull() ?: 0,
-                        type = selectedType,
-                        date = formattedDateStr,
-                        memo = memo.ifBlank { null }
-                    )
-                    viewModel.insertExpense(expense)
-
-                    // 初期化
-                    amount = ""
-                    memo = ""
-                    selectedType = expenseTypes.first()
-                    selectedDateMillis = Calendar.getInstance().timeInMillis
+                    val expenseAmount = amount.toIntOrNull()
+                    if (expenseAmount != null && expenseAmount > 0) {
+                        val expense = Expense(
+                            amount = expenseAmount,
+                            type = selectedType,
+                            date = formattedDate,
+                            memo = memo.ifBlank { null }
+                        )
+                        viewModel.insertExpense(expense)
+                        amount = ""
+                        memo = ""
+                        selectedType = expenseTypes.first()
+                        selectedDateMillis = Calendar.getInstance().timeInMillis
+                    }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("確定")
+                Text("確定", color = Color.White)
             }
         }
     }
 
-    if(showDateSelectDialog){
-        //カレンダーを呼び出す
+    if (showDateSelectDialog) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = System.currentTimeMillis()
+            initialSelectedDateMillis = selectedDateMillis
         )
 
-        // 日付選択時の処理
         val onDateSelected: (Long?) -> Unit = { millis ->
             millis?.let {
-                selectedDateMillis = it // Update selectedDateMillis with the chosen date
+                selectedDateMillis = it
             }
-            }
-
+        }
 
         DatePickerDialog(
-            onDismissRequest = {showDateSelectDialog = false},
+            onDismissRequest = { showDateSelectDialog = false },
             confirmButton = {
-                androidx.compose.material3.TextButton(
+                TextButton(
                     onClick = {
-                        onDateSelected(datePickerState.selectedDateMillis) // Pass the selected date
+                        onDateSelected(datePickerState.selectedDateMillis)
                         showDateSelectDialog = false
                     }
                 ) {
-                    androidx.compose.material3.Text("適用")
+                    Text("適用")
                 }
             },
             dismissButton = {
-                androidx.compose.material3.TextButton(onClick = {
-                    showDateSelectDialog = false
-                }) {
-                    androidx.compose.material3.Text("キャンセル")
+                TextButton(onClick = { showDateSelectDialog = false }) {
+                    Text("キャンセル")
                 }
             }
         ) {
@@ -164,4 +166,3 @@ fun ExpenceInput_calendar(
         }
     }
 }
-
