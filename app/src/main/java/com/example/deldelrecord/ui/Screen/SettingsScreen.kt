@@ -39,7 +39,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "テーマ切り替え",
+                text = "アップデートで実装します☆",
                 style = MaterialTheme.typography.bodyLarge
             )
         }
